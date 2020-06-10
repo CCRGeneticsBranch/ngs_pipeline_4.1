@@ -1,0 +1,4 @@
+change version in common config file
+changes to config file for Mail
+remove comment from verifyBamID target ==> no need to run on research samples
+Comment Line 62 and Remove Comment from line 63 submit_snakemake.sh

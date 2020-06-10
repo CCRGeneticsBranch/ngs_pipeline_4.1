@@ -28,7 +28,8 @@ rule STAR_TPM:
 		--outFileNamePrefix {wildcards.sample}_ucsc \
 		--runThreadN ${{THREADS}} \
 		--outFilterMismatchNmax 2\
-		--outSAMunmapped Within\
+		--outSAMunmapped Within \
+		--limitBAMsortRAM 61374258131\
 	echo "Finished STAR twopass mapping"
 	mv -f {wildcards.sample}_ucscAligned.sortedByCoord.out.bam {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}.star_UCSC.bam
 	samtools index {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}.star_UCSC.bam
@@ -210,7 +211,7 @@ rule STARucsc:
 	module load STAR/{version} samtools
 	cd ${{LOCAL}}/
 	# running two pass mapping
-	STAR    --outTmpDir twopass --genomeDir {params.star_ucsc_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --twopassMode Basic --outFileNamePrefix {wildcards.sample}_UCSC_rsem --runThreadN ${{THREADS}} --outFilterMismatchNmax 2 --outSAMunmapped Within --quantMode TranscriptomeSAM 
+	STAR    --outTmpDir twopass --genomeDir {params.star_ucsc_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate --twopassMode Basic --outFileNamePrefix {wildcards.sample}_UCSC_rsem --runThreadN ${{THREADS}} --outFilterMismatchNmax 2 --outSAMunmapped Within --quantMode TranscriptomeSAM --limitBAMsortRAM 61374258131
 	
 	echo "Finished STAR twopass mapping"
 
@@ -270,7 +271,7 @@ rule STARens:
 	#########################################
 	module load STAR/{version}
 	cd ${{LOCAL}}/
-	STAR	--genomeDir {params.star_ens_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outFileNamePrefix {wildcards.sample}_ENS --runThreadN ${{THREADS}} --outSAMunmapped Within --chimSegmentMin 12  --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10  --alignMatesGapMax 100000  --alignIntronMax 100000  --chimSegmentReadGapMax 3 --outFilterMismatchNmax 2 --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM
+	STAR	--genomeDir {params.star_ens_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outFileNamePrefix {wildcards.sample}_ENS --runThreadN ${{THREADS}} --outSAMunmapped Within --chimSegmentMin 12  --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10  --alignMatesGapMax 100000  --alignIntronMax 100000  --chimSegmentReadGapMax 3 --outFilterMismatchNmax 2 --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM --limitBAMsortRAM 61374258131
 	echo "STAR ENS mapping completed"
 	mv -f {wildcards.sample}_ENSChimeric.out.junction {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}Chimeric.out.junction
 	mv -f {wildcards.sample}_ENSAligned.toTranscriptome.out.bam {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}.ENS_transcriptome.bam

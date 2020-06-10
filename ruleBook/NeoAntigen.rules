@@ -18,7 +18,8 @@ if 'sample_references' in config:
 	for sample in config['sample_references'].keys():
 		subject=SAMPLE_TO_SUBJECT[sample]
 		if config['sample_captures'][sample] not in config['Panel_List']:
-			TARGET    +=[subject+"/"+TIME+"/"+sample+"/NeoAntigen/MHC_Class_I/"+sample+".final.tsv"]
+			#TARGET    +=[subject+"/"+TIME+"/"+sample+"/NeoAntigen/MHC_Class_I/"+sample+".final.tsv"]
+			TARGET    +=[subject+"/"+TIME+"/"+sample+"/NeoAntigen/"+sample+".final.txt"]
 
 if 'RNASeq' in config:
 	for subject  in config['RNASeq'].keys():
@@ -130,7 +131,8 @@ rule pVACseq:
 	input:
 		"{base}/{TIME}/{sample}/NeoAntigen/{sample}.final.vcf"
 	output:
-		"{base}/{TIME}/{sample}/NeoAntigen/MHC_Class_I/{sample}.final.tsv"
+		#"{base}/{TIME}/{sample}/NeoAntigen/MHC_Class_I/{sample}.final.tsv"
+		"{base}/{TIME}/{sample}/NeoAntigen/{sample}.final.txt"
 	version: config['pvacseq']
 	params:
 		rulename = "pVACseq",
@@ -138,7 +140,8 @@ rule pVACseq:
 		normal   = lambda wildcards: config['sample_references'][wildcards.sample][0],
 		tool 	 = NGS_PIPELINE + "/scripts/process_pVACSeq.pl",
 		IEDB	 = config['IEDB'],
-		batch    = config[config['host']]["job_VEP"],
+		#batch    = config[config['host']]["job_VEP"],
+		batch    = config[config['host']]["job_pvacseq"],
 		host	 = config['host']
 	shell: """
 	#######################
@@ -146,11 +149,15 @@ rule pVACseq:
 	
 	module load pvactools/{version} 
 	#pvacseq run --iedb-install-directory {params.IEDB} -e 8  --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/8 &
-	pvacseq run --iedb-install-directory {params.IEDB} -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_ON_NODE}} --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen
+	#pvacseq run --iedb-install-directory {params.IEDB} -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_ON_NODE}} --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen
+	pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_PER_TASK}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} ${{LOCAL}}
 	wait
 	export LC_ALL=C
 	#cat {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/*/MHC_Class_I/*.filtered.tsv |sort |uniq >{output}
-	sort {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > {output}
-	perl {params.tool} {output} |sort |uniq >{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+	#sort {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > {output}
+	sort ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv
+	#perl {params.tool} {output} |sort |uniq >{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+	perl {params.tool} ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv |sort |uniq > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+    chgrp khanlab {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
 	#######################
 	"""
