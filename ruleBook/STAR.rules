@@ -234,11 +234,12 @@ rule RSEMucsc:
 		ref	 = config['rsem_ucsc_ref'],
 		batch     = config[config['host']]['job_STAR'],
 		home	  = WORK_DIR,
+		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """
 	#################################
 	module load rsem/{version}
 	cd ${{LOCAL}}/
-	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}}  --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_UCSC
+	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}} {params.library} --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_UCSC
 	echo "gene and transcript level counts generated"
 	mkdir -p {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_UCSC
 	mv -f {wildcards.sample}_UCSC.genes.results {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_UCSC/{wildcards.sample}.rsem_UCSC.genes.results
@@ -319,7 +320,7 @@ rule STAR_Fusion:
 ########################
 rule RSEMens:
 	input:
-		bam="{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam",
+		bam="{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam",		
 	output:
 		"{subject}/{TIME}/{sample}/RSEM_ENS/{sample}.rsem_ENS.genes.results",
 		"{subject}/{TIME}/{sample}/RSEM_ENS/{sample}.rsem_ENS.isoforms.results",
@@ -329,11 +330,12 @@ rule RSEMens:
 		ref      = config['rsem_ens_ref'],
 		batch    = config[config['host']]['job_STAR'],
 		home     = WORK_DIR,
+		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """
 	################################
 	module load rsem/{version}
 	cd ${{LOCAL}}/
-	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}}  --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_ENS
+	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}} {params.library} --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_ENS
 	echo "gene and transcript level counts generated"
 	mkdir -p {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_ENS
 	mv -f {wildcards.sample}_ENS.genes.results {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_ENS/{wildcards.sample}.rsem_ENS.genes.results
