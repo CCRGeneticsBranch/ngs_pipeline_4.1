@@ -5,6 +5,7 @@
 	"platform"		: "Illumina",
 	"samtools"		: "0.1.19",
 	"samtools_old"		: "0.1.19",
+	"samtools_new"		: "1.9",
 	"fastqc"		: "0.11.2",
 	"bedtools"		: "2.22.0",
 	"bwa"			: "0.7.10",

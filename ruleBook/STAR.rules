@@ -79,7 +79,7 @@ rule STAR_TPM:
 #        params:
 #               	rulename   = "STAR_Fusion",
 #                samtools   = config['samtools'],
-#                batch	   = config[config['host']]['job_STAR_TPM'],
+#                batch	   = config[config['host']]['job_STAR_Fusion'],
 #                SF_ref     = config['STAR_Fusion'],
 #	       	STAR	   = config["STAR"],        
 #		home	  = WORK_DIR,
@@ -116,7 +116,7 @@ rule Picard_bam:
 	params:	
 		rulename = "Picard_bam",
 		samtools = config['samtools'],
-		batch     = config[config['host']]['job_STAR'],
+		batch     = config[config['host']]['job_Picard_bam'],
 		home	  = WORK_DIR,
 	shell: """
 	###########################
@@ -149,7 +149,7 @@ rule RNASeQC_star:
 		rulename="RNASeQC_star",
 		R	=config['version_R'],
 		picard	=config["picard"],
-		batch	= config[config['host']]["job_STAR"],
+		batch	= config[config['host']]["job_RNASeQC_star"],
 		home	  = WORK_DIR,
 	shell: """
 	###########################
@@ -232,7 +232,7 @@ rule RSEMucsc:
 	params:
 		rulename = "RSEMucsc",
 		ref	 = config['rsem_ucsc_ref'],
-		batch     = config[config['host']]['job_STAR'],
+		batch     = config[config['host']]['job_rsem'],
 		home	  = WORK_DIR,
 		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """
@@ -255,15 +255,15 @@ rule STARens:
 		R1="{subject}/{TIME}/FQ/{sample}_R1.fastq.gz",
 		R2="{subject}/{TIME}/FQ/{sample}_R2.fastq.gz",
 	output:
-		temp("{subject}/{TIME}/{sample}/{sample}.star.bam"),
-		temp("{subject}/{TIME}/{sample}/{sample}.star.bam.bai"),
+		"{subject}/{TIME}/{sample}/{sample}.star.bam",
+		"{subject}/{TIME}/{sample}/{sample}.star.bam.bai",
 		"{subject}/{TIME}/{sample}/{sample}Chimeric.out.junction",
 		temp("{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam"),
 	version:
 		config["STAR"]
 	params:
 		rulename = "STARens",
-		samtools = config['samtools'],
+		samtools = config['samtools_new'],
 		batch    = config[config['host']]['job_STAR_TPM'],
 		star_ens_ref  = config['star_2.5.3a_ens'],
 		home     = WORK_DIR,
@@ -296,7 +296,7 @@ rule STAR_Fusion:
 	params:
 		rulename   =  "STAR_Fusion",
 		samtools   =  config['samtools'],
-		batch	   = config[config['host']]['job_STAR_TPM'],
+		batch	   = config[config['host']]['job_STAR_Fusion'],
 		SF_ref     = config['STAR_Fusion_ENS'],
 		STAR	   = config["STAR"],
 		home	   = WORK_DIR,
@@ -328,7 +328,7 @@ rule RSEMens:
 	params:
 		rulename = "RSEMens",
 		ref      = config['rsem_ens_ref'],
-		batch    = config[config['host']]['job_STAR'],
+		batch    = config[config['host']]['job_rsem'],
 		home     = WORK_DIR,
 		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """

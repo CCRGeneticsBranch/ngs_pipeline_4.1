@@ -28,7 +28,7 @@ rule PILE4SEQ:
 	version: config["samtools_old"]
 	params:
 		rulename  = "PILE4SEQ",
-		batch     = config[config['host']]["job_Sequenza"],
+		batch     = config[config['host']]["job_PILE4SEQ"],
 	shell: """
 	#######################
 	module load bedtools/2.25.0
@@ -86,7 +86,7 @@ rule Sequenza_geneAnnot:
 	version: config["bedtools"]
 	params:
 		rulename = "Sequenza_geneAnnot",
-		batch    = config[config['host']]['job_Sequenza']
+		batch    = config[config['host']]['job_default']
 	shell: """
 	#######################
 	set +eo pipefail

@@ -43,7 +43,7 @@ rule conpair_pile:
 	version: config['conpair']
 	params:
 		rulename = "conpair_pile",
-		batch    = config[config['host']]["job_gatk"]
+		batch    = config[config['host']]["job_conpair_pile"]
 	shell: """
 	#######################
 	module load conpair/{version}

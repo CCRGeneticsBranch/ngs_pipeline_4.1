@@ -16,9 +16,11 @@ HOST=os.environ['HOST']
 TIME=os.environ['TIME']
 NOW=os.environ['TMP']
 SAMPLESHEET=os.environ['SAMPLESHEET']
+CLUSTER_CONF=os.environ['CLUSTER_CONF']
 configfile: NGS_PIPELINE +"/config/config_annotation.json"
 configfile: NGS_PIPELINE +"/config/config_common.json"
-configfile: NGS_PIPELINE +"/config/config_cluster.json"
+#configfile: NGS_PIPELINE +"/config/config_cluster.json"
+configfile: NGS_PIPELINE +"/config/config_cluster_" + CLUSTER_CONF + ".json"
 if HOST == 'biowulf.nih.gov':
 	configfile: NGS_PIPELINE +"/config/config_common_biowulf.json"
 elif HOST == 'login01':
@@ -247,7 +249,7 @@ if 'sample_RNASeq' in config:
 			# Its possible to have Matched RNASeq, i.e. Tumor only sequencing (Exome/RNA) but missing Corrosponding Normal
 			#print(Tumor, "Corrosponding RNASeq found but matched Normal not found")
 ###########################################################################
-localrules: Khanlab_Pipeline, RNASeq
+localrules: Khanlab_Pipeline, RNASeq, QC_Summary_Patient, makeHotSpotDB
 #IGV_Session, DBinput, AttachAnnotation, Expressed, vcf2txt, symlink_tophatBam, copyNovoBam, Actionable_Germline, Actionable_RNAseq, Actionable_Somatic, Actionable_Variants, Actionable_fusion, Sub_Fusion, makeConfig, TargetInterval, QC_Summary_Patient,QC_Summary,UnionSomaticCalls,TOPHAT_LINK, SampleGT,QC_Sum, FormatInput, RNASeqQC_1,RNASeqQC1 RNASeqQC_2,RNASeqQC_3, Cuff_Mat
 #Circos, CoveragePlot, BoxPlot_Hotspot, makeConfig,Ideogram
 ###########################################################################
@@ -349,6 +351,8 @@ rule Khanlab_Pipeline:
                 touch {WORK_DIR}/${{sub}}/{TIME}/successful.txt
 		chmod g+rw {WORK_DIR}/${{sub}}/{TIME}/successful.txt 	
 		chgrp {params.group} {WORK_DIR}/${{sub}}/{TIME}/successful.txt
+		rm -f {WORK_DIR}/${{sub}}/{TIME}/*/tophat_*/accepted_hits.bam*
+		rm -f {WORK_DIR}/${{sub}}/{TIME}/*/*star.bam*
         done
 	ssh -o StrictHostKeyChecking=no {params.host} "{params.mail} --location {WORK_DIR} --host {params.host} --head --version {version} {WORK_DIR}/ngs_pipeline_{SAMPLESHEET}_{NOW}.csv |mutt -e \\\"my_hdr Content-Type: text/html\\\" -s 'Khanlab ngs-pipeline Status' `whoami`@mail.nih.gov {params.email}"
 	rm -rf {WORK_DIR}/ngs_pipeline_{SAMPLESHEET}_{NOW}.csv
@@ -442,6 +446,7 @@ rule BWA:
 		rulename  = "BWA",
 		platform  = config["platform"],
 		samtools  = config["samtools"],
+		samtools_new = config["samtools_new"],
 		batch     = config[config['host']]["job_bwa"]
 	shell: """
 	#######################
@@ -452,7 +457,8 @@ rule BWA:
 	
 	THREADS=`expr ${{THREADS}} - 2`
 	
-	bwa mem -M -t ${{THREADS}} -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:{wildcards.sample}\\tPL:{params.platform}' {input.ref} "<zcat ${{R1}}" "<zcat ${{R2}}" | samtools view -Sbh - | samtools sort -m 30000000000 - {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa
+	bwa mem -M -t ${{THREADS}} -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tLB:{wildcards.sample}\\tPL:{params.platform}' {input.ref} "<zcat ${{R1}}" "<zcat ${{R2}}" | samtools view -Sbh - | samtools sort -m 30000000000 - {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa	
+	module load samtools/{params.samtools_new}
 	samtools index {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.bam
 	#######################
 	"""
@@ -692,12 +698,13 @@ rule Picard_MarkDup:
 	params:
 		rulename  = "Picard_MarkDup",
 		batch     = config[config['host']]["job_markdup"],
-		samtools  = config["samtools"]
+		samtools  = config["samtools"],
+		samtools_new  = config["samtools_new"]
 	shell: """
 	#######################
 	module load picard/{version}
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $PICARD_JAR MarkDuplicates AS=true M={output.metrics} I={input.bam} O={output.bam} REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=SILENT
-	module load samtools/{params.samtools}
+	module load samtools/{params.samtools_new}
 	samtools index {output.bam}
 	#######################
 	"""
@@ -737,15 +744,19 @@ rule GATK:
 	version: config["GATK"]
 	params:
 		rulename  = "GATK",
+		samtools_new  = config["samtools_new"],
 		batch     = config[config['host']]["job_gatk"]
 	shell: """
 	#######################
 	module load GATK/{version}
-	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T RealignerTargetCreator -R {input.ref} -known {input.phase1} -known {input.mills} -I {input.bam} -o ${{LOCAL}}/{wildcards.sample}.realignment.intervals
+	module load samtools/{params.samtools_new}
+	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T RealignerTargetCreator -R {input.ref} -known {input.phase1} -known {input.mills} -I {input.bam} -o ${{LOCAL}}/{wildcards.sample}.realignment.intervals -nt ${{THREADS}}
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T IndelRealigner -R {input.ref} -known {input.phase1} -known {input.mills} -I {input.bam} --targetIntervals ${{LOCAL}}/{wildcards.sample}.realignment.intervals -o ${{LOCAL}}/{wildcards.sample}.lr.bam --maxReadsInMemory 1500000
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T BaseRecalibrator -R {input.ref} -knownSites {input.phase1} -knownSites {input.mills} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T PrintReads -R {input.ref} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o {output.bam} -BQSR ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
-	mv -f {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.final.bai {output.index}
+	rm -f {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.final.bai
+	samtools index -@ ${{THREADS}} {output.bam}
+	#mv -f {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.final.bai {output.index}
 	#######################
 	"""
 ############

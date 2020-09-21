@@ -13,10 +13,10 @@ for RULE in sorted(data['rules'].keys()):
 	c = None
 	for TIME in data['rules'][RULE]:
 		if TIME == 'min-runtime':
-			a=round((data['rules'][RULE][TIME]/60))
+			a=round((data['rules'][RULE][TIME]/60/60),2)
 		elif TIME == 'max-runtime':
-			b=round((data['rules'][RULE][TIME]/60))
+			b=round((data['rules'][RULE][TIME]/60/60),2)
 		elif TIME == 'mean-runtime':
-			c=round((data['rules'][RULE][TIME]/60))
+			c=round((data['rules'][RULE][TIME]/60/60),2)
 	if c >0:
-		print RULE,"\t",a,"\t",b,"\t",c
+		print(RULE + "\t" + str(a) + "\t" + str(b) + "\t" + str(c))

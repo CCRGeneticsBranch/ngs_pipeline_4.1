@@ -36,6 +36,7 @@ fi
 
 sheet_name=`basename $SAM_CONFIG .json`
 export SAMPLESHEET="$sheet_name"
+export CLUSTER_CONF="$cluster_conf"
 #NOW=$(date +"%Y%m%d_%H%M%S")
 NOW=$runTime
 #export TIME=$(date +"%Y%m%d%H")
@@ -62,7 +63,7 @@ fi
 export ACT_DIR="/Actionable/"
 SNAKEFILE=$NGS_PIPELINE/ngs_pipeline.rules
 
-cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock  --ri -k -p -T -r -j 3000 --resources DeFuse=25 --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq" # pVACseq"
+cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock --keep-shadow --latency-wait 180 --ri -k -p -T -r -j 3000 --resources DeFuse=25 --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq" # pVACseq"
 #cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock  --ri -k -p -T -r -j 3000 --resources DeFuse=25 --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq -O MergeFQ Khanlab_Pipeline RNASeq"
 umask 022
 if [ $HOST   == 'biowulf.nih.gov' ]; then
@@ -76,7 +77,7 @@ elif [ $HOST == 'login01' ]; then
 	rm -rf /projects/scratch/ngs_pipeline_${sheet_name}_${NOW}_*
 fi
 
-if [ -f ngs_pipeline_${sheet_name}_${NOW}.stats ]; then
+if [ -f ngs_pipeline_${sheet_name}_${NOW}.stats ]; then	
 	python $NGS_PIPELINE/scripts/stats2Table.py ngs_pipeline_${sheet_name}_${NOW}.stats >ngs_pipeline_${sheet_name}_${NOW}.stats.txt
 fi
 

@@ -96,7 +96,7 @@ rule Annovar_CADD:
 	version: config["annovar"]
 	params:
 		rulename   = "Annovar_CADD",
-		batch      = config[config['host']]["job_annovar"],
+		batch      = config[config['host']]["job_annot"],
 		RefData    = config["annovar_data"],
 		build      = config["build"],
 	shell: """

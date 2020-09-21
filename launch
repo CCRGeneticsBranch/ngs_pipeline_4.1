@@ -29,9 +29,13 @@ elsif(`hostname` =~ /tghighmem/ or `hostname` =~ /tgcompute/ or `hostname` =~ /l
 
 my $workDir="";
 my $dryrun;
+my $dag;
+my $low_res;
 my $help;
 GetOptions(
 		'dryrun'	=>\$dryrun,
+		'dag'	=>\$dag,
+		'low_res'	=>\$low_res,
 		'mode|m=s'      =>\$mode,
 		'datadir|d=s'   =>\$dataDir,
 		'workdir|w=s'   =>\$workDir,
@@ -79,21 +83,33 @@ my $NOW=`echo \$(date +"%Y%m%d_%H%M%S")`;
 chomp $NOW;
 my $jobid;
 my $sheet_name = basename($sheet, ".json");
+my $time_limit = "6-00:00:00";
+my $cluster_conf = "high";
+if ($low_res) {
+	$time_limit = "5-00:00:00";
+	$cluster_conf = "low";
+}
 if (`hostname` =~ /cn/ or `hostname` =~ /biowulf.nih.gov/){
 	if ($dryrun){
+		my $dag_cmd = "";
+		if ($dag) {
+			$dag_cmd = "--dag | dot -Tsvg > dag.$mode.svg";
+		}
 		my $cmd = "(
 		export TMP=$NOW
 		export TIME=$time
-		module load snakemake/3.8.0
+		module load snakemake/4.1.0
+		module load graphviz
 		export NGS_PIPELINE=$NGS_PIPELINE
 		export WORK_DIR=$workDir
 		export DATA_DIR=$dataDir
 		export ACT_DIR=\"/Actionable/\"
 		export HOST=\"biowulf.nih.gov\"
 		export SAMPLESHEET=$sheet_name
+		export CLUSTER_CONF=$cluster_conf
 		SNAKEFILE=$NGS_PIPELINE/ngs_pipeline.rules
 		SAM_CONFIG=$sheet
-		snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq
+		snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq $dag_cmd
 		rm -rf $workDir/ngs_pipeline_${sheet_name}_$NOW.csv
 		)";
 		print "$cmd\n";
@@ -102,15 +118,20 @@ if (`hostname` =~ /cn/ or `hostname` =~ /biowulf.nih.gov/){
 	else{
 		`mkdir -p "$workDir/log/"`;
 		`chmod g+rw "$workDir/log"`;
-		$jobid = `sbatch -e $workDir/log/ngs-pipeline.%j.e -o $workDir/log/ngs-pipeline.%j.o --export=time=$mode,ngs=$NGS_PIPELINE,dataDir=$dataDir,workDir=$workDir,sheet=$sheet,runTime=$NOW --cpus-per-task=1 --partition=ccr,norm --time=5-00:00:00 $NGS_PIPELINE/submit_snakemake.sh`;
+		$jobid = `sbatch -e $workDir/log/ngs-pipeline.%j.e -o $workDir/log/ngs-pipeline.%j.o --export=cluster_conf=$cluster_conf,time=$mode,ngs=$NGS_PIPELINE,dataDir=$dataDir,workDir=$workDir,sheet=$sheet,runTime=$NOW --cpus-per-task=1 --mem=2G --partition=ccr,norm --mail-type=TIME_LIMIT_90 --time=$time_limit $NGS_PIPELINE/submit_snakemake.sh`;
 	}
 }
 elsif(`hostname` =~ /tghighmem/ or `hostname` =~ /tgcompute/ or `hostname` =~ /login01/){
 	if ($dryrun){
+		my $dag_cmd = "";
+		if ($dag) {
+			$dag_cmd = "--dag | dot -Tsvg > dag.$mode.svg";
+		}
 		my $cmd= "(
 		export TMP=$NOW
 		export TIME=$time
                 module load snakemake/3.8.0
+                module load graphviz
                 export NGS_PIPELINE=$NGS_PIPELINE
                 export WORK_DIR=$workDir
                 export DATA_DIR=$dataDir
@@ -119,7 +140,7 @@ elsif(`hostname` =~ /tghighmem/ or `hostname` =~ /tgcompute/ or `hostname` =~ /l
 		export SAMPLESHEET=$sheet_name
                 SNAKEFILE=$NGS_PIPELINE/ngs_pipeline.rules
                 SAM_CONFIG=$sheet
-                snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq
+                snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq $dag_cmd
 		rm -rf $workDir/ngs_pipeline_${sheet_name}_$NOW.csv
 		)";
 		print "$cmd\n";
@@ -128,7 +149,7 @@ elsif(`hostname` =~ /tghighmem/ or `hostname` =~ /tgcompute/ or `hostname` =~ /l
 	else{
 		`mkdir -p "$workDir/log/"`;
 		`chmod g+rw "$workDir/log/"`;
-		$jobid = `sbatchT -e $workDir/log/ngs-pipeline.%j.e -o $workDir/log/ngs-pipeline.%j.o --export=time=$mode,ngs=$NGS_PIPELINE,dataDir=$dataDir,workDir=$workDir,sheet=$sheet,runTime=$NOW --cpus-per-task=1 --partition=batch --time=07-00:00:00 $NGS_PIPELINE/submit_snakemake.sh`;
+		$jobid = `sbatchT -e $workDir/log/ngs-pipeline.%j.e -o $workDir/log/ngs-pipeline.%j.o --export=time=$mode,ngs=$NGS_PIPELINE,dataDir=$dataDir,workDir=$workDir,sheet=$sheet,runTime=$NOW --cpus-per-task=1 --mem=4G --partition=batch --time=08-00:00:00 $NGS_PIPELINE/submit_snakemake.sh`;
 	}
 }
 else{

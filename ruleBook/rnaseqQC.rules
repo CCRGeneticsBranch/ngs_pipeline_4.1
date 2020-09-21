@@ -13,7 +13,7 @@ rule RNASeqQC:
 	params:
 		rulename  = "RNASeqQC",
 		R	  = config['version_R'],
-		batch     = config[config['host']]["job_markdup"],
+		batch     = config[config['host']]["job_RNASeqQC"],
 	shell: """
 	#######################
 	module load picard/{version}
@@ -30,7 +30,7 @@ rule RNASeqQC1:
 	version: config["picard"]
 	params:
 		rulename  ="RNASeqQC1",
-		batch     =config[config['host']]["job_markdup"],
+		batch     =config[config['host']]["job_RNASeqQC1"],
 		ref       =config['Bowtie2Index'].replace('genome', 'genome.fa')
 	shell: """
 	#######################

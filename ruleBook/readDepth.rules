@@ -16,7 +16,7 @@ rule ReadDepth:
 		rulename	= "ReadDepth",
 		R 		= config['version_R'],
 		samtools	= config['samtools'],
-		batch		= config[config['host']]["job_bedtools"]
+		batch		= config[config['host']]["job_readDepth"]
 	shell: """
 	#######################	
 	module load bedtools/{version} samtools/{params.samtools}

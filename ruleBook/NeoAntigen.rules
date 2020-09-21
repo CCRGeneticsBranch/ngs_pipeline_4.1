@@ -43,12 +43,12 @@ rule seq2HLA:
 		python  = config["version_python"],
 		R	= config['version_R'],
 		bowtie	= config['bowtie'],
-		batch	= config[config['host']]["job_annovar"],
+		batch	= config[config['host']]["job_hla"],
 		HLA	= config['HLA']
 	shell: """
 	#######################
 	module load bowtie/{params.bowtie} python/{params.python} R/{params.R}
-	python {input.script} {params.HLA}/seq2HLA/ -1 {input.R[0]} -2 {input.R[1]}  -p 2 -r {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/HLA/seq2HLA/{wildcards.sample}
+	python {input.script} {params.HLA}/seq2HLA/ -1 {input.R[0]} -2 {input.R[1]}  -p ${{THREADS}} -r {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/HLA/seq2HLA/{wildcards.sample}
 	#######################
 	"""
 ############
@@ -62,7 +62,7 @@ rule HLAminer:
 	output: "{base}/{TIME}/{sample}/HLA/HLAminer/HLAminer_HPTASR.csv"
 	params:
 		rulename="HLAminer",
-		batch	=config[config['host']]["job_annovar"],
+		batch	=config[config['host']]["job_hlaminer"],
 		HLA	=config['HLA'],
         workdir=WORK_DIR,
 		location=NGS_PIPELINE

@@ -39,7 +39,7 @@ rule GATK_RNASeq_RTC:
         version: config["GATK_new"]
         params:
                 rulename  = "GATK_RNASeq_RTC",
-                batch     = config[config['host']]["job_gatk_RNA"]
+                batch     = config[config['host']]["job_gatk_RNA_BR"]
         shell: """
         #######################
         module load GATK/{version}
@@ -52,7 +52,7 @@ rule GATK_RNASeq_RTC:
 rule GATK_RNASeq_IR:
         input:  bam="{base}/{TIME}/{sample}/{sample}.star.trim.bam",
                 bai="{base}/{TIME}/{sample}/{sample}.star.trim.bai",
-		intervals="{base}/{TIME}/{sample}/{sample}.star.realignment.intervals",
+                intervals="{base}/{TIME}/{sample}/{sample}.star.realignment.intervals",
                 ref=config["reference"],
                 phase1=config["1000G_phase1"],
                 mills=config["Mills_and_1000G"]
@@ -83,7 +83,7 @@ rule GATK_RNASeq_BR:
         version: config["GATK_new"]
         params:
                 rulename  = "GATK_RNASeq_BR",
-                batch     = config[config['host']]["job_gatk_RNA"]
+                batch     = config[config['host']]["job_gatk_RNA_BR"]
         shell: """
         #######################
         module load GATK/{version}
@@ -106,7 +106,7 @@ rule GATK_RNASeq_PR:
         version: config["GATK_new"]
         params:
                 rulename  = "GATK_RNASeq_PR",
-                batch     = config[config['host']]["job_gatk_RNA"]
+                batch     = config[config['host']]["job_gatk_RNA_PR"]
         shell: """
         #######################
         module load GATK/{version}

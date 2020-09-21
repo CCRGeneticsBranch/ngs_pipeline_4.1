@@ -17,6 +17,6 @@ rule HAPCALLER:
 	#######################
 	module load GATK/{version}
 	#java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -o {output.vcf} --dbsnp {input.dbsnp} -mbq 20 -mmq 30 --updated 20200506 by using GATK wraper. Xinyu.
-    GATK -m ${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -o {output.vcf} --dbsnp {input.dbsnp} -mbq 20 -mmq 30
+    GATK -m ${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -o {output.vcf} --dbsnp {input.dbsnp} -mbq 20 -mmq 30 -nct ${{THREADS}}
 	#######################
 	"""
