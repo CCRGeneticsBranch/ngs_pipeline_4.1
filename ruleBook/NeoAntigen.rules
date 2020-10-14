@@ -146,7 +146,7 @@ rule pVACseq:
 	module load pvactools/{version} 
 	#pvacseq run --iedb-install-directory {params.IEDB} -e 8  --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/8 &
 	#pvacseq run --iedb-install-directory {params.IEDB} -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_ON_NODE}} --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen
-	pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_PER_TASK}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} ${{LOCAL}}
+	pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{THREADS}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} ${{LOCAL}}
 	wait
 	export LC_ALL=C
 	#cat {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/*/MHC_Class_I/*.filtered.tsv |sort |uniq >{output}
