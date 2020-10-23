@@ -146,14 +146,19 @@ rule pVACseq:
 	module load pvactools/{version} 
 	#pvacseq run --iedb-install-directory {params.IEDB} -e 8  --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/8 &
 	#pvacseq run --iedb-install-directory {params.IEDB} -e 8,9,10,11,12,13,14 -t ${{SLURM_CPUS_ON_NODE}} --fasta-size=50 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen
-	pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{THREADS}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} ${{LOCAL}}
+	#pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{THREADS}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} ${{LOCAL}}
+    pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{THREADS}} --fasta-size=400 {input} {wildcards.sample} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen
 	wait
 	export LC_ALL=C
 	#cat {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/*/MHC_Class_I/*.filtered.tsv |sort |uniq >{output}
 	#sort {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > {output}
-	sort ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv
 	#perl {params.tool} {output} |sort |uniq >{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
-	perl {params.tool} ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv |sort |uniq > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+    #post processing    
+    #sort ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv
+	#perl {params.tool} ${{LOCAL}}/MHC_Class_I/{wildcards.sample}.final.tsv |sort |uniq > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+    sort {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.filtered.tsv |uniq > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.final.uniq.tsv
+	perl {params.tool} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I/{wildcards.sample}.final.uniq.tsv |sort |uniq > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
     chgrp khanlab {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final.txt
+    rm -rf {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/MHC_Class_I
 	#######################
 	"""
