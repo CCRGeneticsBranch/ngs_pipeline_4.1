@@ -1,5 +1,5 @@
 {
-	"pipeline_version"	: "v3.21",
+	"pipeline_version"	: "v3.2.2",
 	"mail"			: "-c gangalapudiv2@nih.gov",
 	"mails"			: "-c wangc@mail.nih.gov -c chouh@nih.gov -c NCIBioinformatics_Oncogenomics@mail.nih.gov",
 	"platform"		: "Illumina",
