@@ -123,7 +123,7 @@ rule TOPHAT:
 	#######################
 	module load tophat/{version}
 	module load samtools/{params.samtools}
-	module load python/2.7
+	module load python/3.8
 	tophat -p ${{THREADS}} -o ${{LOCAL}} --keep-fasta-order --rg-id {wildcards.sample} --no-coverage-search --rg-sample {wildcards.sample} --rg-library {wildcards.sample} --rg-platform ILLUMINA --fusion-search --fusion-min-dist 100000 --mate-inner-dist 84 --mate-std-dev 74 {params.ref} {input.R[0]} {input.R[1]}
 	cp -rf ${{LOCAL}}/* {wildcards.base}/{TIME}/{wildcards.sample}/tophat_{wildcards.sample}/
 	samtools index {wildcards.base}/{TIME}/{wildcards.sample}/tophat_{wildcards.sample}/accepted_hits.bam
@@ -170,12 +170,15 @@ rule TOPHAT_FUSION:
 		tp_ref   =config['tophat_post_ref']
 	shell: """
 	#######################
+        module unload python
 	module load tophat/{version}
 	#module load tophat/2.1.2
 	module load bowtie/{params.bowtie}
 	module load blast/{params.blast}
-	module load python/2.7
+#	module load python/3.8
+	export PYTHONNOUSERSITE=True
 	cd {wildcards.base}/{TIME}/{wildcards.sample}/
+        python -c "import intervaltree;print(intervaltree.__path__)"
 	rm -f blast ensGene.txt ensGtp.txt mcl refGene.txt
 	ln -s {params.tp_ref}/* .
 	tophat-fusion-post -p ${{THREADS}} --num-fusion-pairs 1 {params.ref}

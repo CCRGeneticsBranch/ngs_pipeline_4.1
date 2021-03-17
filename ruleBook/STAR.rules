@@ -36,71 +36,6 @@ rule STAR_TPM:
 	#######################
 	"""
 
-##################
-## STAR_Fusion
-##################
-#rule STAR_Fusion:
-#	input:
-#		Junction="{subject}/{TIME}/{sample}/{sample}_ucscChimeric.out.junction",
-#	output:
-#		"{subject}/{TIME}/{sample}/STAR-Fusion_results/star-fusion.fusion_predictions.tsv",
-#		"{subject}/{TIME}/{sample}/fusion/STAR-fusion.txt",
-#	version: config["STAR-Fusion"],
-#	params:
-#		rulename   = "STAR_Fusion",
-#		samtools   = config['samtools'],
-#		batch      = config[config['host']]['job_STAR_TPM'],
-#		SF_ref	   = config['STAR_Fusion'],
-#		home	  = WORK_DIR,
-#	shell: """
-#	#########################
-#	module load STAR-Fusion/{version}
-#	module load samtools/{params.samtools}
-#	module load perl
-#	STAR-Fusion --genome_lib_dir {params.SF_ref} -J {input.Junction} --CPU ${{THREADS}} --output_dir {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results
-#	
-#	cp  {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results/star-fusion.fusion_predictions.tsv {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/fusion/STAR-fusion.txt
-#
-#	###########################
-#       """
-
-##################
-# STAR_Fusion
-##################
-#rule STAR_Fusion:
-#        input:  R=lambda wildcards: FQ[wildcards.sample],
-#                R1="{subject}/{TIME}/FQ/{sample}_R1.fastq.gz",
-#                R2="{subject}/{TIME}/FQ/{sample}_R2.fastq.gz",
-#              	
-#        output:
-#               	"{subject}/{TIME}/{sample}/STAR-Fusion_results/star-fusion.fusion_predictions.tsv",
-#                "{subject}/{TIME}/{sample}/fusion/STAR-fusion.txt",
-#        version: config["STAR-Fusion"],
-#        params:
-#               	rulename   = "STAR_Fusion",
-#                samtools   = config['samtools'],
-#                batch	   = config[config['host']]['job_STAR_Fusion'],
-#                SF_ref     = config['STAR_Fusion'],
-#	       	STAR	   = config["STAR"],        
-#		home	  = WORK_DIR,
-#        shell: """
-#        #########################
-#        module load STAR-Fusion/{version}
-#        module load samtools/{params.samtools}
-#        module load perl
-#	module load STAR/{params.STAR}
-#        STAR-Fusion --genome_lib_dir {params.SF_ref} --left_fq {input.R[0]} --right_fq {input.R[1]} --CPU ${{THREADS}} --output_dir {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results
-# STAR-fusion runs STAR innately with these parameters --outReadsUnmapped None  --chimSegmentMin 12  --chimJunctionOverhangMin 12 
-#  --alignSJDBoverhangMin 10  --alignMatesGapMax 100000  --alignIntronMax 100000  --alignSJstitchMismatchNmax 5 -1 5 5  --runThreadN 10 --outSAMstrandField
-#  intronMotif  --outSAMunmapped Within  --outSAMtype BAM Unsorted  --outSAMattrRGline ID:GRPundef  --chimSegmentReadGapMax 3 --twopassMode Basic 
-#        cp  {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results/star-fusion.fusion_predictions.tsv {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/fusion/STAR-fusion.txt
-#	# remove intermediate files
-#	rm {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results/std.Chimeric.out.sam	
-#	rm {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results/std.STAR.bam
-#	rm -rf {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/STAR-Fusion_results/star-fusion.preliminary
-#
-#        ###########################
-#        """
 
 ###################
 # Picard_bam
@@ -160,36 +95,6 @@ rule RNASeQC_star:
 	java -Xmx${{MEM}}g  -Djava.io.tmpdir=${{LOCAL}} -jar $RNASEQCPATH/RNA-SeQC_v1.1.8.jar   -r {input.ref} -rRNA {input.rna_interval} -o {wildcards.base}/{TIME}/{wildcards.sample}/qc/rnaseqc  -s "{wildcards.sample}|{input.bam}|{wildcards.sample}" -t {input.gtf}	
 	###########################
 	"""	
-
-############
-# featureCounts
-#############
-rule FeatureCounts:
-	input:
-		bam="{base}/{TIME}/{sample}/{sample}.star_UCSC.bam",
-		ref=lambda wildcards: config['GTF'][wildcards.gtf],
-		script=NGS_PIPELINE + "/scripts/featureCounts.v2.R",
-		trasncriptRDS=lambda wildcards: config['RDS'][wildcards.gtf],
-		geneRDS=lambda wildcards: config['RDS'][wildcards.gtf].replace('transcript', 'gene'),
-		exonRDS=lambda wildcards: config['RDS'][wildcards.gtf].replace('transcript', 'exon'),
-	output:
-		"{base}/{TIME}/{sample}/TPM_{gtf}/{sample}.transcript.TPM.txt",
-		"{base}/{TIME}/{sample}/TPM_{gtf}/{sample}.gene.TPM.txt",
-		"{base}/{TIME}/{sample}/TPM_{gtf}/{sample}.exon.TPM.txt",
-	version: config['version_R']
-	params:
-		rulename   = "FeatureCounts",
-		batch      =config[config['host']]['job_featCount'],
-		work_dir =  WORK_DIR
-	shell: """
-	#######################
-	module load R/{version}
-	cd ${{LOCAL}}
-	{input.script} --nt ${{THREADS}} --lib="{wildcards.sample}" --targetFile="{params.work_dir}/{input.bam}" --referenceGTF="{input.ref}" --featureType="transcript" --resultOut="{params.work_dir}/{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/TPM_{wildcards.gtf}/" --annotationRDS={input.trasncriptRDS}
-	{input.script} --nt ${{THREADS}} --lib="{wildcards.sample}" --targetFile="{params.work_dir}/{input.bam}" --referenceGTF="{input.ref}" --featureType="gene" --resultOut="{params.work_dir}/{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/TPM_{wildcards.gtf}/" --annotationRDS={input.geneRDS}
-	{input.script} --nt ${{THREADS}} --lib="{wildcards.sample}" --targetFile="{params.work_dir}/{input.bam}" --referenceGTF="{input.ref}" --featureType="exon" --resultOut="{params.work_dir}/{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/TPM_{wildcards.gtf}/" --annotationRDS={input.exonRDS}
-	#######################
-	"""
 
 ##############
 # STAR-UCSC

@@ -1,5 +1,5 @@
 {
-	"group"			: "Clinomics",
+	"group"			: "khanlab",
 	"host"			: "biowulf.nih.gov",
 	"app_home"			: "/data/Clinomics/apps",
 	"annovar_data"		: "/data/Clinomics/Ref/khanlab/annotation/",
