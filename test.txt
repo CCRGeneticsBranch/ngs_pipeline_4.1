@@ -1,3 +1,0 @@
-TEST
-newline_added
-exra line
