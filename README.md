@@ -7,7 +7,7 @@ This is the implementation of [KhanLab](https://ccr.cancer.gov/Genetics-Branch/j
 The easiest way to get this pipeline is to clone the repository.
 
 ```
-git clone https://github.com/patidarr/ngs_pipeline.git
+git clone https://github.com/CCRGeneticsBranch/ngs_pipeline-v3.2.2.git
 ```
 This pipeline is available on NIH biowulf cluster, contact me if you would like to do a test run. The data from this pipeline could directly be ported in [OncoGenomics-DB](https://clinomics.ncifcrf.gov/production/public/), an application created to visualize NGS data available to NIH users.
 ## Requirements
@@ -61,7 +61,7 @@ Bioinformatics Tools Listed in [config files](config/config_common.json)
 - QC
 - Tophat, STAR
 - Broad Standard Practices on STAR bam
-- fusion-catcher, tophat-fusion, deFuse
+- fusion-catcher, tophat-fusion, STAR-fusion
 - Cufflinks (ENS and UCSC)
 - Rsubread TPM (ENS, UCSC), Gene, Transcript and Exon Level
 - In-house Exon Expression (ENS and UCSC)
