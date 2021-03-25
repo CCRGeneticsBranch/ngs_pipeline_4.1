@@ -120,21 +120,17 @@ rule VEP:
 	perl {params.merge} {input.HLA[0]} {input.HLA[1]} | sort > {wildcards.base}/{wildcards.TIME}/{params.normal}/HLA/{params.normal}.Calls.txt
 	#######################
 	"""
-#splits = [chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY]
-splits = ['chr1:1-120000001','chr1:120000001-249250621','chr2:1-120000001','chr2:120000001-243199373','chr3:1-120000001','chr3:120000001-198022430','chr4:1-120000001','chr4:120000001-191154276','chr5:1-120000001','chr5:120000001-180915260','chr6','chr7','chr8','chr9','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr20','chr21','chr22','chrX','chrY']
+
 
 ###########
 #       split_vcf
 ###########
-rule split_vcf:
+checkpoint split_vcf:
 	input:
 		lambda wildcards: "{base}/{TIME}/" +config['sample_references'][wildcards.sample][0]+"/HLA/" +config['sample_references'][wildcards.sample][0]+".Calls.txt",
 		vcf = "{base}/{TIME}/{sample}/NeoAntigen/{sample}.final.vcf",
-#		lambda wildcards: "{base}/{TIME}/" +config['sample_references'][wildcards.sample][0]+"/HLA/" +config['sample_references'][wildcards.sample][0]+".Calls.txt",
-#		{base}/{TIME}/{sample}/HLA/{sample}.Calls.txt
 	output:
-#		out = "{base}/{TIME}/{sample}/NeoAntigen/split/split_complete",
-		out = expand("{{base}}/{{TIME}}/{{sample}}/NeoAntigen/split/{{sample}}_sorted_{split}.vcf",split = splits)
+		out = directory("{base}/{TIME}/{sample}/NeoAntigen/split"),
 	params:
 		rulename = "split_vcf",
 		VEP	 = config['VEP'],
@@ -143,12 +139,9 @@ rule split_vcf:
 	########################
 	module load vcftools bcftools
 	mkdir -p {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split
-	vcf-sort {input.vcf} > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf
-	bgzip -c {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf.gz
-	tabix -p vcf {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf.gz
-#	grep -vE "^#" {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf |cut -f1 |uniq| while read i ; do tabix -h {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf.gz $i  > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_sorted_$i.vcf ; done
-	for i in {splits} ; do tabix -h {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/{wildcards.sample}.final_sorted.vcf.gz $i  > {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_sorted_$i.vcf ; done
-	chgrp khanlab {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/*
+
+		python /data/Clinomics/Tools/ngs_pipeline-3.2.2-vg/scripts/split_vcf.py {input.vcf} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/
+
 	#########################
 	"""
 ############
@@ -156,16 +149,14 @@ rule split_vcf:
 #############
 rule pVACseq:
 	input:
-		vcf = "{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_sorted_{split}.vcf",
+		vcf = "{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_{i}.vcf",
 	output:
-		"{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_{split}/MHC_Class_I/{sample}_{split}.filtered.tsv",
-#		"{base}/{TIME}/{sample}/NeoAntigen/{sample}.final.txt"
+		"{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_{i}/MHC_Class_I/{sample}_{i}.filtered.tsv"
 	version: config['pvacseq']
 	params:
 		rulename = "pVACseq",
 		python   = config["version_python"],
 		normal   = lambda wildcards: config['sample_references'][wildcards.sample][0],
-#		vcfin =  lambda wildcards: config[splits][0],		
 		tool 	 = NGS_PIPELINE + "/scripts/pvacseq.sh",
 		IEDB	 = config['IEDB'],
 		version	= config['pvacseq'],
@@ -173,17 +164,12 @@ rule pVACseq:
 		host	 = config['host']
 	shell: """
 	#######################
-#	allele=`cut -f1 {wildcards.base}/{wildcards.TIME}/{params.normal}/HLA/{params.normal}.Calls.txt |grep -v Allele|tr '\\n' ',' |sed -e 's/,$//g'`
 	
 	module load pvactools/{version} 
-	mkdir -p {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split}
-	{params.tool} {wildcards.base}/{wildcards.TIME}/{params.normal}/HLA/{params.normal}.Calls.txt {input.vcf} {wildcards.sample}_{wildcards.split} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split} {params.version}
-#	cd {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split}
-#	pvacseq run --iedb-install-directory /opt/iedb -e 8,9,10,11,12,13,14 -t ${{THREADS}} --fasta-size=400 {input.vcf} {wildcards.sample}_{wildcards.split} ${{allele}} {{NNalign,NetMHC,NetMHCIIpan,NetMHCcons,NetMHCpan,PickPocket,SMM,SMMPMBEC,SMMalign}} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split} 2>{wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split}/{wildcards.sample}_{wildcards.split}_err
-#	is_empty=$(grep "TSV file is empty" {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split}/{wildcards.sample}_{wildcards.split}_err|wc -l)
-#	wait
-#	export LC_ALL=C
-	if [ -f {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.split}/MHC_Class_I/{wildcards.sample}_{wildcards.split}.filtered.tsv ]
+	mkdir -p {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.i}
+	{params.tool} {wildcards.base}/{wildcards.TIME}/{params.normal}/HLA/{params.normal}.Calls.txt {input.vcf} {wildcards.sample}_{wildcards.i} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/{wildcards.sample}_{wildcards.i} {params.version}
+
+	if [ -f {output} ]
 	then
 		echo "pVACSeq step is complete"
 	else
@@ -192,13 +178,18 @@ rule pVACseq:
 	#######################
 	"""
 
+def aggregate_input(wildcards):
+	checkpoint_output = checkpoints.split_vcf.get(sample=wildcards.sample,base = wildcards.base, TIME = wildcards.TIME).output[0]
+	print(checkpoint_output)
+	return expand("{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_{i}/MHC_Class_I/{sample}_{i}.filtered.tsv",base = wildcards.base, TIME = wildcards.TIME, sample = wildcards.sample, i=glob_wildcards(os.path.join(checkpoint_output, "{sample}_{i}.vcf")).i)
+
 
 #############
 #	Merge_pvacseq
 #############
 rule Merge_pvacseq:
 	input:
-		expand("{{base}}/{{TIME}}/{{sample}}/NeoAntigen/split/{{sample}}_{split}/MHC_Class_I/{{sample}}_{split}.filtered.tsv",split = splits)
+		aggregate_input
 	output:
 		"{base}/{TIME}/{sample}/NeoAntigen/{sample}.final.txt"
 	version: config['pvacseq']
