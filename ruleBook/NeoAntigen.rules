@@ -134,13 +134,14 @@ checkpoint split_vcf:
 	params:
 		rulename = "split_vcf",
 		VEP	 = config['VEP'],
+		tool     = NGS_PIPELINE + "/scripts/split_vcf.py",
 		batch    = config[config['host']]["job_VEP"],
 	shell: """
 	########################
 	module load vcftools bcftools
 	mkdir -p {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split
 
-		python /data/Clinomics/Tools/ngs_pipeline-3.2.2-vg/scripts/split_vcf.py {input.vcf} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/
+		python {params.tool} {input.vcf} {wildcards.base}/{wildcards.TIME}/{wildcards.sample}/NeoAntigen/split/
 
 	#########################
 	"""
@@ -180,7 +181,6 @@ rule pVACseq:
 
 def aggregate_input(wildcards):
 	checkpoint_output = checkpoints.split_vcf.get(sample=wildcards.sample,base = wildcards.base, TIME = wildcards.TIME).output[0]
-	print(checkpoint_output)
 	return expand("{base}/{TIME}/{sample}/NeoAntigen/split/{sample}_{i}/MHC_Class_I/{sample}_{i}.filtered.tsv",base = wildcards.base, TIME = wildcards.TIME, sample = wildcards.sample, i=glob_wildcards(os.path.join(checkpoint_output, "{sample}_{i}.vcf")).i)
 
 

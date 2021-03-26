@@ -33,7 +33,6 @@ if len(df.axes[0]) > 400:
 else:
     shutil.copy(sys.argv[1],sys.argv[2])
     dest_loc = sys.argv[2] + filename + ".final.vcf"
-    print(dest_loc)
     new_vcf_file = sys.argv[2]+ filename + "_0.vcf"
     os.rename(dest_loc, new_vcf_file)
 
