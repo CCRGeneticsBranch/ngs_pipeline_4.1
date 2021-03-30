@@ -51,7 +51,7 @@ rule Picard_bam:
 	params:	
 		rulename = "Picard_bam",
 		samtools = config['samtools'],
-		batch     = config[config['host']]['job_Picard_bam'],
+		batch     = config[config['host']]['job_STAR'],
 		home	  = WORK_DIR,
 	shell: """
 	###########################
@@ -84,7 +84,7 @@ rule RNASeQC_star:
 		rulename="RNASeQC_star",
 		R	=config['version_R'],
 		picard	=config["picard"],
-		batch	= config[config['host']]["job_RNASeQC_star"],
+		batch	= config[config['host']]["job_STAR"],
 		home	  = WORK_DIR,
 	shell: """
 	###########################
@@ -95,6 +95,7 @@ rule RNASeQC_star:
 	java -Xmx${{MEM}}g  -Djava.io.tmpdir=${{LOCAL}} -jar $RNASEQCPATH/RNA-SeQC_v1.1.8.jar   -r {input.ref} -rRNA {input.rna_interval} -o {wildcards.base}/{TIME}/{wildcards.sample}/qc/rnaseqc  -s "{wildcards.sample}|{input.bam}|{wildcards.sample}" -t {input.gtf}	
 	###########################
 	"""	
+
 
 ##############
 # STAR-UCSC
@@ -137,14 +138,13 @@ rule RSEMucsc:
 	params:
 		rulename = "RSEMucsc",
 		ref	 = config['rsem_ucsc_ref'],
-		batch     = config[config['host']]['job_rsem'],
+		batch     = config[config['host']]['job_STAR'],
 		home	  = WORK_DIR,
-		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """
 	#################################
 	module load rsem/{version}
 	cd ${{LOCAL}}/
-	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}} {params.library} --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_UCSC
+	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}}  --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_UCSC
 	echo "gene and transcript level counts generated"
 	mkdir -p {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_UCSC
 	mv -f {wildcards.sample}_UCSC.genes.results {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_UCSC/{wildcards.sample}.rsem_UCSC.genes.results
@@ -160,15 +160,15 @@ rule STARens:
 		R1="{subject}/{TIME}/FQ/{sample}_R1.fastq.gz",
 		R2="{subject}/{TIME}/FQ/{sample}_R2.fastq.gz",
 	output:
-		"{subject}/{TIME}/{sample}/{sample}.star.bam",
-		"{subject}/{TIME}/{sample}/{sample}.star.bam.bai",
+		temp("{subject}/{TIME}/{sample}/{sample}.star.bam"),
+		temp("{subject}/{TIME}/{sample}/{sample}.star.bam.bai"),
 		"{subject}/{TIME}/{sample}/{sample}Chimeric.out.junction",
 		temp("{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam"),
 	version:
 		config["STAR"]
 	params:
 		rulename = "STARens",
-		samtools = config['samtools_new'],
+		samtools = config['samtools'],
 		batch    = config[config['host']]['job_STAR_TPM'],
 		star_ens_ref  = config['star_2.5.3a_ens'],
 		home     = WORK_DIR,
@@ -201,7 +201,7 @@ rule STAR_Fusion:
 	params:
 		rulename   =  "STAR_Fusion",
 		samtools   =  config['samtools'],
-		batch	   = config[config['host']]['job_STAR_Fusion'],
+		batch	   = config[config['host']]['job_STAR_TPM'],
 		SF_ref     = config['STAR_Fusion_ENS'],
 		STAR	   = config["STAR"],
 		home	   = WORK_DIR,
@@ -225,7 +225,7 @@ rule STAR_Fusion:
 ########################
 rule RSEMens:
 	input:
-		bam="{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam",		
+		bam="{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam",
 	output:
 		"{subject}/{TIME}/{sample}/RSEM_ENS/{sample}.rsem_ENS.genes.results",
 		"{subject}/{TIME}/{sample}/RSEM_ENS/{sample}.rsem_ENS.isoforms.results",
@@ -233,14 +233,13 @@ rule RSEMens:
 	params:
 		rulename = "RSEMens",
 		ref      = config['rsem_ens_ref'],
-		batch    = config[config['host']]['job_rsem'],
+		batch    = config[config['host']]['job_STAR'],
 		home     = WORK_DIR,
-		library  = lambda wildcards: "--strandedness reverse" if config['sample_captures'][wildcards.sample] != "polya" else "",
 	shell: """
 	################################
 	module load rsem/{version}
 	cd ${{LOCAL}}/
-	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}} {params.library} --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_ENS
+	rsem-calculate-expression --no-bam-output --paired-end -p ${{THREADS}}  --estimate-rspd  --bam {params.home}/{input.bam} {params.ref} {wildcards.sample}_ENS
 	echo "gene and transcript level counts generated"
 	mkdir -p {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_ENS
 	mv -f {wildcards.sample}_ENS.genes.results {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/RSEM_ENS/{wildcards.sample}.rsem_ENS.genes.results

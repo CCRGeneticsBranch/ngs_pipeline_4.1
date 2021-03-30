@@ -2,8 +2,8 @@
 # coding: utf-8
 rule RNASeqQC:
 	input:
-		bam="{base}/{TIME}/{sample}/{sample}.tophat.final.bam",
-		bai="{base}/{TIME}/{sample}/{sample}.tophat.final.bam.bai",
+		bam="{base}/{TIME}/{sample}/{sample}.star.bam",
+		bai="{base}/{TIME}/{sample}/{sample}.star.bam.bai",
 		rna_interval=config['rRNA_interval'],
 		ref_flat=config['ref_flat'],
 	output:
@@ -23,8 +23,8 @@ rule RNASeqQC:
 	"""
 rule RNASeqQC1:
 	input:
-		bam="{base}/{TIME}/{sample}/{sample}.tophat.final.bam",
-		bai="{base}/{TIME}/{sample}/{sample}.tophat.final.bam.bai",
+		bam="{base}/{TIME}/{sample}/{sample}.star.bam",
+		bai="{base}/{TIME}/{sample}/{sample}.star.bam.bai",
 	output:
 		table="{base}/{TIME}/{sample}/qc/{sample}.AlignmentSummaryMetrics.txt",
 	version: config["picard"]

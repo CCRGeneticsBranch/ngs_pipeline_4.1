@@ -63,7 +63,7 @@ fi
 export ACT_DIR="/Actionable/"
 SNAKEFILE=$NGS_PIPELINE/ngs_pipeline.rules
 
-cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock --latency-wait 180 --ri -k -p  -r -j 3000 -T 1 --resources DeFuse=25 --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq  -R split_vcf "
+cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock --latency-wait 180 --ri -k -p  -r -j 3000 -T 1  --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq "
 #cmd="--directory $WORK_DIR --snakefile $SNAKEFILE --configfile $SAM_CONFIG --jobscript $NGS_PIPELINE/scripts/jobscript.sh --jobname {params.rulename}.{jobid} --nolock  --ri -k -p -T -r -j 3000 --resources DeFuse=25 --resources SIFT=8 --stats ngs_pipeline_${sheet_name}_${NOW}.stats -R RNASeq -O MergeFQ Khanlab_Pipeline RNASeq"
 umask 022
 if [ $HOST   == 'biowulf.nih.gov' ]; then
