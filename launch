@@ -109,7 +109,7 @@ if (`hostname` =~ /cn/ or `hostname` =~ /biowulf.nih.gov/){
 		export CLUSTER_CONF=$cluster_conf
 		SNAKEFILE=$NGS_PIPELINE/ngs_pipeline.rules
 		SAM_CONFIG=$sheet
-		snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq split_vcf $dag_cmd
+		snakemake --directory \$WORK_DIR --snakefile \$SNAKEFILE --configfile \$SAM_CONFIG --dryrun -p -r --ri -R RNASeq  $dag_cmd
 		rm -rf $workDir/ngs_pipeline_${sheet_name}_$NOW.csv
 		)";
 		print "$cmd\n";
