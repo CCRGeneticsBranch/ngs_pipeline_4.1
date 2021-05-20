@@ -10,11 +10,9 @@ use List::Util qw(first);
 #
 ###########################################################
 my $library        = $ARGV[0];
-## my $defuse         = $ARGV[X];  NOT used 5/11/2018
-my $tophat         = $ARGV[1];
-my $fusioncatcher  = $ARGV[2];
-my $star_fusion	   = $ARGV[3];
-my $destination    = $ARGV[4];
+my $fusioncatcher  = $ARGV[1];
+my $star_fusion	   = $ARGV[2];
+my $destination    = $ARGV[3];
 print "#LeftGene\tRightGene\tChr_Left\tPosition\tChr_Right\tPosition\tSample\tTool\tSpanReadCount\n";
 ###########################################################
 unless (open(FC, "$fusioncatcher")){

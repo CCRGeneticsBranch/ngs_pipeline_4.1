@@ -31,7 +31,8 @@ rule RNASeqQC1:
 	params:
 		rulename  ="RNASeqQC1",
 		batch     =config[config['host']]["job_RNASeqQC1"],
-		ref       =config['Bowtie2Index'].replace('genome', 'genome.fa')
+		ref       =config['bwaIndex'],
+#		ref       =config['Bowtie2Index'].replace('genome', 'genome.fa')
 	shell: """
 	#######################
 	module load picard/{version}
