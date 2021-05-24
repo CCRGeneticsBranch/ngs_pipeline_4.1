@@ -12,7 +12,8 @@ use List::Util qw(first);
 my $library        = $ARGV[0];
 my $fusioncatcher  = $ARGV[1];
 my $star_fusion	   = $ARGV[2];
-my $destination    = $ARGV[3];
+my $arriba         = $ARGV[3];
+my $destination    = $ARGV[4];
 print "#LeftGene\tRightGene\tChr_Left\tPosition\tChr_Right\tPosition\tSample\tTool\tSpanReadCount\n";
 ###########################################################
 unless (open(FC, "$fusioncatcher")){
@@ -58,3 +59,24 @@ while(<SF>){
 }
 close SF;
 close SF_OUT;
+#############################################################
+unless (open(AR, "$arriba")){
+        print STDERR "Can not open the file $arriba\n";
+        exit;
+}
+unless (open(AR_OUT, ">$destination/$library.arriba-fusion.txt")){
+        print STDERR "Can not open the file $destination/$library.arriba-fusion.txt\n";
+        die $!;
+}
+while(<AR>){
+        chomp;
+        my @local =split("\t", $_);
+        if($_ =~ /#gene1/){print AR_OUT "$_\n"; next}
+        my @left  = split(":", $local[4]);
+        my @right = split(":", $local[5]);
+        print "$local[0]\t$local[1]\t$left[0]\t$left[1]\t$right[0]\t$right[1]\t$library\tArriba\t$local[9]:$local[10]:$local[11]\n";
+        print AR_OUT "$_\n";
+}
+close AR;
+close AR_OUT;
+
