@@ -806,7 +806,6 @@ rule MuTect:
 rule Strelka:
 	input:
 		lambda wildcards: somaticPairs[wildcards.Tumor],
-		ref=config["reference"],
 		interval=lambda wildcards: config['target_intervals'][pairedCapture[wildcards.Tumor]].replace("target","targetbp")
 	output:
 		snps="{subject}/{TIME}/{Tumor}/calls/{Tumor}.strelka.snvs.raw.vcf",
@@ -816,17 +815,21 @@ rule Strelka:
 		rulename = "Strelka",
 		batch    = config[config['host']]["job_strelka"],
 		config=NGS_PIPELINE + "/Tools_config/"+config["strelka_config"],
-		vcftools = config["vcftools"]
+		vcftools = config["vcftools"],
+		manta = config["manta"],
+		genome = config["reference"]
 	shell: """
 	#######################
 	module load strelka/{version}
-	configureStrelkaWorkflow.pl --normal={input[2]} --tumor={input[0]}\
-	--ref={input.ref} --config={params.config} --output-dir=${{LOCAL}}/strelka
-	make -j ${{SLURM_CPUS_PER_TASK}} -f ${{LOCAL}}/strelka/Makefile
+	module load manta/{params.manta}
+	configManta.py --normalBam {input[2]} --tumorBam {input[0]}  --referenceFasta {params.genome} --runDir ${{LOCAL}}/manta
+	${{LOCAL}}/manta/runWorkflow.py
+	configureStrelkaSomaticWorkflow.py --normalBam={input[2]} --tumorBam={input[0]} --referenceFasta={params.genome} --config={params.config} --indelCandidates ${{LOCAL}}/manta/results/variants/candidateSmallIndels.vcf.gz --runDir=${{LOCAL}}/strelka --exome
+	${{LOCAL}}/strelka/runWorkflow.py -m local 
 	module load vcftools/{params.vcftools}
-	vcftools --vcf ${{LOCAL}}/strelka/results/passed.somatic.snvs.vcf --bed {input.interval} --out {output.snps} --recode --keep-INFO-all
+	vcftools --gzvcf ${{LOCAL}}/strelka/results/variants/somatic.snvs.vcf.gz --bed {input.interval} --out {output.snps} --recode --keep-INFO-all
 	mv -f {output.snps}.recode.vcf {output.snps}
-	vcftools --vcf ${{LOCAL}}/strelka/results/passed.somatic.indels.vcf --bed {input.interval}  --out {output.indels} --recode --keep-INFO-all
+	vcftools --gzvcf ${{LOCAL}}/strelka/results/variants/somatic.indels.vcf.gz --bed {input.interval}  --out {output.indels} --recode --keep-INFO-all
 	mv -f {output.indels}.recode.vcf {output.indels}
 	NORMAL=`basename {input[2]} .bwa.final.bam`
 	sed -i "s/FORMAT\\tNORMAL\\tTUMOR/FORMAT\\t${{NORMAL}}\\t{wildcards.Tumor}/g" {output.snps}
