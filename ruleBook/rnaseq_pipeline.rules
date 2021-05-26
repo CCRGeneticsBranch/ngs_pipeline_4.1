@@ -32,6 +32,7 @@ if 'RNASeq' in config:
 		for sample in SAM_RNASEQ[subject]:
 			TARGET_R += [subject+"/"+TIME+"/"+sample+"/"+sample+".star.final.bam"]
 			TARGET_R += [subject+"/"+TIME+"/"+sample+"/fusion/fusion-catcher.txt"]
+			TARGET_R += [subject+"/"+TIME+"/"+sample+"/fusion/arriba-fusion.txt"]
 			# silence Defuse rule 05/11/2018
 			#TARGET_R += [subject+"/"+TIME+"/"+sample+"/fusion/defuse.filtered.txt"]
 			TARGET_R += [subject+"/"+TIME+"/"+sample+"/fusion/STAR-fusion.txt"]
@@ -172,6 +173,7 @@ rule Sub_Fusion:
 	input:
 		fc="{subject}/{TIME}/{sample}/fusion/fusion-catcher.txt",
 		SF="{subject}/{TIME}/{sample}/fusion/STAR-fusion.txt",
+		Arriba="{subject}/{TIME}/{sample}/fusion/arriba-fusion.txt",
 		convertor = NGS_PIPELINE + "/scripts/" + config['Actionable_fusion'],
 	output:
 		"{subject}/{TIME}/{sample}/fusion/{sample}.actionable.fusion.txt"
@@ -181,7 +183,7 @@ rule Sub_Fusion:
 	shell: """
 	#######################
 	mkdir -p {wildcards.subject}/{TIME}/Actionable
-	perl {input.convertor} {wildcards.sample}  {input.fc} {input.SF} {wildcards.subject}/{TIME}{ACT_DIR} |awk 'NR<2{{print $0;next}}{{print $0| "sort "}}' >{output}
+	perl {input.convertor} {wildcards.sample}  {input.fc} {input.SF} {input.Arriba} {wildcards.subject}/{TIME}{ACT_DIR} |awk 'NR<2{{print $0;next}}{{print $0| "sort "}}' >{output}
 	#######################
 	"""
 ############
