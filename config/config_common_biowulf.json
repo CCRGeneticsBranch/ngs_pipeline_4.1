@@ -26,6 +26,7 @@
 	"HLA"			: "/data/Clinomics/Ref/khanlab/HLA/",
 	"version_R"		: "3.4",
 	"version_python"	: "2.7",
+	"python3"		: "3.7",
 	"version_blast"		: "2.5.0+",
 	"VEP"			: "86",
 	"IEDB"			: "/opt/iedb",

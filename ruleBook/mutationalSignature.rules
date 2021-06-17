@@ -5,6 +5,27 @@ if 'sample_references' in config:
 		subject=SAMPLE_TO_SUBJECT[sample]
 		if config['sample_captures'][sample] not in config['Panel_List']:
 			TARGET +=[subject+"/"+TIME+ACT_DIR+sample+".mutationalSignature.pdf"]
+
+
+UNION_SOM={}
+if 'sample_references' in config:
+    for sample in config['sample_references'].keys():
+        subject=SAMPLE_TO_SUBJECT[sample]
+        if config['sample_captures'][sample] not in config['Panel_List']: 
+        #This condition constrains the rule to generate annotatedFull and unionSomaticVarsFull output for only exomes(libraries generated using the kits in the Panel_List are excluded, keeping this rule consistent with mutational signature rule). Removing this line of code will cause the rule to generate the 2 files for all paired tumor samples.   
+            ## use Full annotated files, same as in Mutation Burden
+            local =[(subject+"/"+TIME+"/"+sample+"/calls/"+sample+".MuTect.raw.snpEff.vcf"),(subject+"/"+TIME+"/"+sample+"/calls/"+sample+".strelka.snvs.raw.snpEff.vcf"),(subject+"/"+TIME+"/"+sample+"/calls/"+sample+".strelka.indels.raw.snpEff.vcf")]
+            TARGET +=[subject+"/"+TIME+ACT_DIR+sample+".Indel83_cosmic_v3.pdf"]
+            TARGET +=[subject+"/"+TIME+ACT_DIR+sample+".SBS96_cosmic_v3.pdf"]
+            TARGET +=[subject+"/"+TIME+ACT_DIR+sample+".DBS78_cosmic_v3.pdf"]
+            ## remove expressed calls
+            ##if sample in config['sample_RNASeq'].keys():
+            ##	local = [w.replace('annotated','annotated.expressed') for w in local]
+        UNION_SOM[sample] = local
+
+
+
+
 ############
 #	Mutational Signature
 ############
@@ -26,3 +47,37 @@ rule MutationalSignature:
 	rm -rf {output.v1}.tmp
 	#######################
 	"""
+
+################
+#	Cosmic3 Signature
+################
+rule Cosmic3Signature:
+	input:
+		Files = lambda wildcards: UNION_SOM[wildcards.sample]
+#		expand("{subject}/{TIME}/{base1}/calls/{base}.snpEff.txt",
+	output:
+		indel ="{base}/{sample}.Indel83_cosmic_v3.pdf",
+		SBS ="{base}/{sample}.SBS96_cosmic_v3.pdf",
+		DBS ="{base}/{sample}.DBS78_cosmic_v3.pdf"
+	version: config["version_R"]
+	params:
+		rulename = "Cosmic3Signature",
+		batch    = config[config['host']]["job_default"],
+		python =  config["python3"],
+		tool   =NGS_PIPELINE + "/scripts/new.py",
+		home     = WORK_DIR,
+	shell: """
+	#######################
+	module load R/4.0.5 
+	module load python/{params.python}
+	if [ -d "{wildcards.base}/input" ]; then rm -Rf {wildcards.base}/input ; fi
+	mkdir {wildcards.base}/input
+	cp {input.Files}  {wildcards.base}/input
+	python {params.tool} {wildcards.sample} {wildcards.base}/input
+	cut -f1 {wildcards.base}/input/output/ID/{wildcards.sample}.ID83.all |awk -F ":" -v OFS="_" '{{print $2,$3,$1,$4}}'|sed  s'/Del/DEL/g'|sed s'/Ins/INS/g' |sed s'/__MutationType_/MutationType/g'|sed s'/_R_/_repeats_/g'|sed s'/_M_/_MH_/g'| sed s'/5/5+/g' |paste - {wildcards.base}/input/output/ID/{wildcards.sample}.ID83.all |cut -f1,3 > {wildcards.base}/input/output/ID/{wildcards.sample}.ID83.all_updatedcolumns
+	cd {wildcards.base}
+	Rscript /data/khanlab/projects/cosmic_signatures/deconstructsigs_indels.R {params.home}/{wildcards.base}/input/output/ID/{wildcards.sample}.ID83.all_updatedcolumns {wildcards.sample}.Indel83
+	Rscript	/data/khanlab/projects/cosmic_signatures/deconstructsigs_sbs.R {params.home}/{wildcards.base}/input/output/SBS/{wildcards.sample}.SBS96.all {wildcards.sample}.SBS96
+	Rscript /data/khanlab/projects/cosmic_signatures/deconstructsigs_dbs.R {params.home}/{wildcards.base}/input/output/DBS/{wildcards.sample}.DBS78.all {wildcards.sample}.DBS78
+	#######################
+	"""	
