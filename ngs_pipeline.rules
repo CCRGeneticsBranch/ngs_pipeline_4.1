@@ -741,19 +741,23 @@ rule GATK:
 	output:
 		bam="{base}/{TIME}/{sample}/{sample}.bwa.final.bam",
 		index="{base}/{TIME}/{sample}/{sample}.bwa.final.bam.bai",
-	version: config["GATK"]
+	version: config["GATK_new"]
 	params:
 		rulename  = "GATK",
 		samtools_new  = config["samtools_new"],
-		batch     = config[config['host']]["job_gatk"]
+		batch     = config[config['host']]["job_gatk"],
+		gatk_dna  = config["GATKdna"]
 	shell: """
 	#######################
 	module load GATK/{version}
 	module load samtools/{params.samtools_new}
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T RealignerTargetCreator -R {input.ref} -known {input.phase1} -known {input.mills} -I {input.bam} -o ${{LOCAL}}/{wildcards.sample}.realignment.intervals -nt ${{THREADS}}
 	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T IndelRealigner -R {input.ref} -known {input.phase1} -known {input.mills} -I {input.bam} --targetIntervals ${{LOCAL}}/{wildcards.sample}.realignment.intervals -o ${{LOCAL}}/{wildcards.sample}.lr.bam --maxReadsInMemory 1500000
-	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T BaseRecalibrator -R {input.ref} -knownSites {input.phase1} -knownSites {input.mills} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
-	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T PrintReads -R {input.ref} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o {output.bam} -BQSR ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
+	module load GATK/{params.gatk_dna}
+	gatk --java-options -Xmx${{MEM}}g BaseRecalibrator  --input ${{LOCAL}}/{wildcards.sample}.lr.bam  --reference {input.ref} --known-sites {input.mills} --output ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
+##	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T BaseRecalibrator -R {input.ref} -knownSites {input.phase1} -knownSites {input.mills} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
+	gatk --java-options -Xmx${{MEM}}g  ApplyBQSR --reference  {input.ref}  --input ${{LOCAL}}/{wildcards.sample}.lr.bam --bqsr-recal-file ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt --output {output.bam} 
+##	java -Xmx${{MEM}}g -Djava.io.tmpdir=${{LOCAL}} -jar $GATK_JAR -T PrintReads -R {input.ref} -I ${{LOCAL}}/{wildcards.sample}.lr.bam -o {output.bam} -BQSR ${{LOCAL}}/{wildcards.sample}.recalibration.matrix.txt
 	rm -f {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.final.bai
 	samtools index -@ ${{THREADS}} {output.bam}
 	#mv -f {wildcards.base}/{TIME}/{wildcards.sample}/{wildcards.sample}.bwa.final.bai {output.index}

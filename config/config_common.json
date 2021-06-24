@@ -22,6 +22,7 @@
 	"bamutil" 		: "1.0.13",
 	"GATK"			: "3.4-0",
 	"GATK_new"		: "3.8-1",
+	"GATKdna"		: "4.1.8.0",
 	"bam2mpg"		: "1.0.1",
 	"MuTect"		: "1.1.7",
 	"strelka"		: "2.9.10",
