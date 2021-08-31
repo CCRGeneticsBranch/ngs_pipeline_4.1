@@ -9,14 +9,14 @@ rule HAPCALLER:
 		interval=lambda wildcards: config['target_intervals'][config['sample_captures'][wildcards.sample]].replace("target", "targetbp"),
 	output:
 		vcf="{subject}/{TIME}/{sample}/calls/{sample}.HC_DNASeq.raw.vcf"
-	version: config["GATKdna"]
+	version: config["GATK"]
 	params:
 		rulename = "HAPCALLER",
 		batch    = config[config['host']]["job_HC"]
 	shell: """
 	#######################
 	module load GATK/{version}
-#    GATK -m ${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -o {output.vcf} --dbsnp {input.dbsnp} -mbq 20 -mmq 30 -nct ${{THREADS}}
-    gatk --java-options -Xmx${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -O {output.vcf} --dbsnp {input.dbsnp} -mbq 20  --native-pair-hmm-threads ${{THREADS}}
+    GATK -m ${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -o {output.vcf} --dbsnp {input.dbsnp} -mbq 20 -mmq 30 -nct ${{THREADS}}
+#    gatk --java-options -Xmx${{MEM}}g HaplotypeCaller -R {input.ref} -I {input.bam} -L {input.interval} -O {output.vcf} --dbsnp {input.dbsnp} -mbq 20  --native-pair-hmm-threads ${{THREADS}}
 	#######################
 	"""

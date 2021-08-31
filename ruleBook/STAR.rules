@@ -37,10 +37,10 @@ rule STARens:
 		R1="{subject}/{TIME}/FQ/{sample}_R1.fastq.gz",
 		R2="{subject}/{TIME}/FQ/{sample}_R2.fastq.gz",
 	output:
-		temp("{subject}/{TIME}/{sample}/{sample}.star.bam"),
-		temp("{subject}/{TIME}/{sample}/{sample}.star.bam.bai"),
+		"{subject}/{TIME}/{sample}/{sample}.star.bam",
+		"{subject}/{TIME}/{sample}/{sample}.star.bam.bai",
 		"{subject}/{TIME}/{sample}/{sample}Chimeric.out.junction",
-		temp("{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam"),
+		"{subject}/{TIME}/{sample}/{sample}.ENS_transcriptome.bam",
 	version:
 		config["STAR"]
 	params:
@@ -54,7 +54,8 @@ rule STARens:
 	#########################################
 	module load STAR/{version}
 	cd ${{LOCAL}}/
-	STAR	--genomeDir {params.star_ens_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outFileNamePrefix {wildcards.sample}_ENS --runThreadN ${{THREADS}} --outSAMunmapped Within --chimSegmentMin 12  --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10  --alignMatesGapMax 100000  --alignIntronMax 100000  --chimSegmentReadGapMax 3 --outFilterMismatchNmax 2 --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM --limitBAMsortRAM 61374258131
+	ulimit -u 10240 -n 16384
+	STAR	--genomeDir {params.star_ens_ref} --readFilesIn {input.R[0]} {input.R[1]} --readFilesCommand zcat --outFileNamePrefix {wildcards.sample}_ENS --runThreadN ${{THREADS}} --outSAMunmapped Within --chimSegmentMin 12  --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10  --alignMatesGapMax 100000  --alignIntronMax 100000  --chimSegmentReadGapMax 3 --outFilterMismatchNmax 2 --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM --outBAMsortingThreadN 6 --limitBAMsortRAM 61374258131
 	echo "STAR ENS mapping completed"
 	mv -f {wildcards.sample}_ENSChimeric.out.junction {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}Chimeric.out.junction
 	mv -f {wildcards.sample}_ENSAligned.toTranscriptome.out.bam {params.home}/{wildcards.subject}/{TIME}/{wildcards.sample}/{wildcards.sample}.ENS_transcriptome.bam

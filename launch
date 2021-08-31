@@ -83,10 +83,10 @@ my $NOW=`echo \$(date +"%Y%m%d_%H%M%S")`;
 chomp $NOW;
 my $jobid;
 my $sheet_name = basename($sheet, ".json");
-my $time_limit = "2-10:00:00";
+my $time_limit = "5-10:00:00";
 my $cluster_conf = "high";
 if ($low_res) {
-	$time_limit = "2-10:00:00";
+	$time_limit = "3-10:00:00";
 	$cluster_conf = "low";
 }
 if (`hostname` =~ /cn/ or `hostname` =~ /biowulf.nih.gov/){
