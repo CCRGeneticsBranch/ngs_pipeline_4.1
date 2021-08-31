@@ -343,8 +343,9 @@ AnnotationInput.pcg" >list
 	perl {input.geneanno} {input.ACMG} {output.all}.tmp >{output.all}
 
 	perl {input.coding} AnnotationInput.annotations.final.txt | perl {input.filter} - {input.blacklisted} 0.05 >{output.all}.tmp
-	grep -P "Chr\\tStart\\tEnd\\tRef\\tAlt" {output.all}.tmp >{output.filtered}
-	grep -v -P "Chr\\tStart\\tEnd\\tRef\\tAlt" {output.all}.tmp >>{output.filtered}
+#	grep -P "Chr\\tStart\\tEnd\\tRef\\tAlt" {output.all}.tmp >{output.filtered}
+#	grep -v -P "Chr\\tStart\\tEnd\\tRef\\tAlt" {output.all}.tmp >>{output.filtered}
+	cp {output.all}.tmp > {output.filtered}
 	rm -rf {output.all}.tmp list
 	#######################
 	"""
