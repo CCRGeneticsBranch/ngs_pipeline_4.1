@@ -24,7 +24,7 @@ cols <-c('#26294a','#01545a','#bd544f','#017351',
 options(stringsAsFactors = FALSE)
 set.seed(1234)
 png(FILE ,width = 1000, height = 1000, res=100, points=12, type=c("cairo"))
-par(mar=c(2, 2, 2, 2))
+par(mar=c(15, 7, 1, 7))
 plot(c(1,800), c(1,800), type="n", axes=FALSE, xlab="", ylab="", main="")
 
 circos(R=400, cir="hg19", type="chr", mapping=UCSC.hg19.chr,print.chr.lab=TRUE, W=10, lwd=5, cex=1.5)
@@ -35,5 +35,10 @@ for (i in 1:length(files)){
         circos(cir="hg19", R=r, W=50, type="s", mapping=LOH.data, col.v=3, col=cols[i], B=FALSE, cex=0.0001, lwd=1)
 	r=r-45
 }
-legend("topright", legend=labs, col=cols, lty=1, lwd=4, cex=1)
+
+
+
+legend("bottom", legend=labs, col=cols, lty=1, lwd=4, cex=.75, xpd = TRUE,inset=c(0,-0.25))
+legendstyle =list("x" = 0.5, "y" = -100)
+layoutstyle = list(legend=legendstyle)
 dev.off()
