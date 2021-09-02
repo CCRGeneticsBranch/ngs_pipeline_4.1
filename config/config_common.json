@@ -44,7 +44,7 @@
 	"cufflinks"		: "2.2.1_patched",
 	"fusioncatcher"		: "1.00",
 	"defuse"		: "0.7.0",
-	"pypy"			: "4.0",
+	"sequenza"		: "3.0.0",
 	"verifybamid"		: "1.1.3",
 	"conpair"		: "10102016",
 	"cnvkit"		: "0.9.3",

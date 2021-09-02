@@ -13,6 +13,26 @@ if 'sample_references' in config:
 			TARGET +=[subject+"/"+TIME+"/"+sample+"/sequenza/"+sample+"/"+sample+"_alternative_fit.pdf"]	
 			TARGET +=[subject+"/"+TIME+"/"+sample+"/sequenza/"+sample+".txt"]
 
+
+SAMPLE_TO_SUBJECT  = {}
+for subject,samples in config['subject'].items():
+        for sample in samples:
+                SAMPLE_TO_SUBJECT[sample]=subject
+
+somaticPairs = {}
+
+if len(config['sample_references']) > 0:
+        for Tumor in config['sample_references']:
+                for Normal in config['sample_references'][Tumor]:
+                        TumorBam   = "{subject}/{TIME}/{sample}/{sample}.bwa.final".format(TIME=TIME, subject=SAMPLE_TO_SUBJECT[Tumor], sample=Tumor)
+                        NormalBam  = "{subject}/{TIME}/{sample}/{sample}.bwa.final".format(TIME=TIME, subject=SAMPLE_TO_SUBJECT[Normal], sample=Normal)
+                        pairedCapture[Tumor] = config['sample_captures'][Tumor]
+                        somaticPairs[Tumor] = [TumorBam + ".bam" , TumorBam + ".bam.bai", NormalBam + ".bam", NormalBam + ".bam.bai"]
+###########################################################################
+
+
+
+
 ############
 #       GenotypeFile
 ############
@@ -39,10 +59,11 @@ rule PILE4SEQ:
 	"""
 rule Sequenza:
 	input:
-		files=lambda wildcards: SequenzaPairs[wildcards.Tumor],
+		R=lambda wildcards: somaticPairs[wildcards.Tumor],
 		seq=NGS_PIPELINE+ "/scripts/sequenza-utils.py",
 		gc_ref=config["annovar_data"]+config["gc50Base"],
 		RCode=NGS_PIPELINE+ "/scripts/run_sequenza_pipeline.R",
+		ref=config["reference"],
 	output:
 		"{subject}/{TIME}/{Tumor}/sequenza/{Tumor}/{Tumor}_CN_bars.pdf",
 		"{subject}/{TIME}/{Tumor}/sequenza/{Tumor}/{Tumor}_CP_contours.pdf",
@@ -59,17 +80,19 @@ rule Sequenza:
 		"{subject}/{TIME}/{Tumor}/sequenza/{Tumor}/{Tumor}_sequenza_log.txt",
 		all=temp("{subject}/{TIME}/{Tumor}/sequenza/{Tumor}.seqz.gz"),
 		bin=temp("{subject}/{TIME}/{Tumor}/sequenza/{Tumor}.seqz_small.gz")
-	version: config['pypy']
+	version: config['sequenza']
 	params:
 		rulename = "Sequenza",
 		R	 = config["version_R"],
-		batch    = config[config['host']]['job_Sequenza']
+		batch    = config[config['host']]['job_Sequenza'],
+		samtools = config["samtools_new"],
 	shell: """
 	#######################
-	module load pypy/{version}
-	pypy {input.seq} pileup2seqz -gc {input.gc_ref} -n {input.files[0]} -t {input.files[1]} |gzip >{output.all}
-	pypy {input.seq} seqz-binning -w 50 -s {output.all} | gzip > {output.bin}
+	module load sequenza-utils/{version}
+	module load samtools/{params.samtools}
 	module load R/{params.R}
+	sequenza-utils bam2seqz --normal {input.R[2]} --tumor {input.R[0]}  --fasta {input.ref}  -gc {input.gc_ref}  -o {output.all}
+	sequenza-utils seqz_binning -w 50 -s {output.all}  | gzip > {output.bin} 
 	cd {wildcards.subject}/{wildcards.TIME}/{wildcards.Tumor}/sequenza/
 	{input.RCode} --sample {wildcards.Tumor}
 	#######################
