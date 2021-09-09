@@ -9,7 +9,7 @@ rule HAPCALLER:
 		interval=lambda wildcards: config['target_intervals'][config['sample_captures'][wildcards.sample]].replace("target", "targetbp"),
 	output:
 		vcf="{subject}/{TIME}/{sample}/calls/{sample}.HC_DNASeq.raw.vcf"
-	version: config["GATK"]
+	version: config["GATK-HC"]
 	params:
 		rulename = "HAPCALLER",
 		batch    = config[config['host']]["job_HC"]

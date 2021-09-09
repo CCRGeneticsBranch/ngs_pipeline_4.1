@@ -741,12 +741,12 @@ rule GATK:
 	output:
 		bam="{base}/{TIME}/{sample}/{sample}.bwa.final.bam",
 		index="{base}/{TIME}/{sample}/{sample}.bwa.final.bam.bai",
-	version: config["GATK_new"]
+	version: config["GATK_RNA"]
 	params:
 		rulename  = "GATK",
 		samtools_new  = config["samtools_new"],
 		batch     = config[config['host']]["job_gatk"],
-		gatk_dna  = config["GATKdna"]
+		gatk_dna  = config["GATK_DNA"]
 	shell: """
 	#######################
 	module load GATK/{version}
