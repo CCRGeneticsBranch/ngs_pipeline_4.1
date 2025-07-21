@@ -1,4 +1,7 @@
-[![Snakemake](https://img.shields.io/badge/snakemake- >=3.8.0-brightgreen.svg?style=flat-square)](https://snakemake.bitbucket.io)
+> ⚠️ **This repository is no longer maintained and has been archived for reference purposes only..**
+> 
+> For the latest updates and active development, please visit [Oncogenomics_NF_WF](https://github.com/CCRGeneticsBranch/Oncogenomics_NF_WF).
+
 
 ## Introduction
 This is the implementation of [KhanLab](https://ccr.cancer.gov/Genetics-Branch/javed-khan) NGS Pipeline using Snakemake.
@@ -18,7 +21,6 @@ Bioinformatics Tools Listed in [config files](config/config_common.json)
 ### Following R Packages
 - [OmicCircos](https://www.bioconductor.org/packages/release/bioc/html/OmicCircos.html)
 - [RColorBrewer](https://cran.r-project.org/web/packages/RColorBrewer/index.html)
-- [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html)
 - [edgeR](http://bioconductor.org/packages/release/bioc/html/edgeR.html)
 - [limma](http://bioconductor.org/packages/release/bioc/html/limma.html)
 - [optparse](https://cran.r-project.org/web/packages/optparse/index.html)
@@ -36,10 +38,10 @@ Bioinformatics Tools Listed in [config files](config/config_common.json)
 
 ### DNASeq:
 - QC
-- BWA, Novoalign  
+- BWA
 - Broad Standard Practices on bwa bam  
-- Haplotype Caller, Platupys, Bam2MPG, MuTect, Strelka  
-- snpEff, Annovar, SIFT, pph2, Custom Annotation  
+- Haplotype Caller, Bam2MPG, MuTect, Manta, Strelka  
+- snpEff, Annovar, SIFT, Custom Annotation  
 - Coverage Plot, Circos Plot, Hotspot Coverage Box Plot  
 - Create input format for oncogenomics database (Patient Level)  
 - Make Actionable Classification for Germline and Somatic Mutations   
@@ -59,11 +61,10 @@ Bioinformatics Tools Listed in [config files](config/config_common.json)
 
 ### RNASeq:
 - QC
-- Tophat, STAR
+- STAR
 - Broad Standard Practices on STAR bam
-- fusion-catcher, tophat-fusion, STAR-fusion
-- Cufflinks (ENS and UCSC)
-- Rsubread TPM (ENS, UCSC), Gene, Transcript and Exon Level
+- fusion-catcher, Arriba, STAR-fusion
+- RSEM Gene, Transcript and Exon Level
 - In-house Exon Expression (ENS and UCSC)
 - Haplotype Caller
 - snpEff, Annovar, SIFT, pph2, Custom Annotation
